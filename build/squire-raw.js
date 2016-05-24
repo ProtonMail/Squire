@@ -2044,9 +2044,10 @@ var onPaste = function ( event ) {
     // to get an HTML version is to fallback to letting the browser insert
     // the content. Same for getting image data. *Sigh*.
     if ( clipboardData && (
-            indexOf.call( clipboardData.types, 'text/html' ) > -1 || (
+            indexOf.call( clipboardData.types, 'text/html' ) > -1 || ( !isGecko &&
             indexOf.call( clipboardData.types, 'text/plain' ) > -1 &&
             indexOf.call( clipboardData.types, 'text/rtf' ) < 0 ) ) ) {
+        
         event.preventDefault();
         // Abiword on Linux copies a plain text and html version, but the HTML
         // version is the empty string! So always try to get HTML, but if none,
@@ -2058,6 +2059,7 @@ var onPaste = function ( event ) {
         }
         return;
     }
+
 
     // No interface :(
     // ---------------
