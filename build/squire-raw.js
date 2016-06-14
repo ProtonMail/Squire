@@ -1625,7 +1625,8 @@ var fontSizes = {
     4: 18,
     5: 24,
     6: 32,
-    7: 48
+    7: 48,
+    8: 54
 };
 
 var spanToSemantic = {
@@ -3560,15 +3561,15 @@ proto.insertHTML = function ( html, isPaste ) {
             string: html
         };
         this.fireEvent( 'startPaste', event );
-        html = event.string;
+        this.fireEvent( 'purify', event );
     }
 
     var range = this.getSelection(),
         frag = this._doc.createDocumentFragment(),
         div = this.createElement( 'DIV' );
 
-    // Parse HTML into DOM tree
-    div.innerHTML = html;
+    // Parse purified string into DOM tree
+    div.innerHTML = event.string;
     frag.appendChild( empty( div ) );
 
     // Record undo checkpoint

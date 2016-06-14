@@ -7,7 +7,8 @@ var fontSizes = {
     4: 18,
     5: 24,
     6: 32,
-    7: 48
+    7: 48,
+    8: 54
 };
 
 var spanToSemantic = {
