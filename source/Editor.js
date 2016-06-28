@@ -1750,7 +1750,7 @@ proto.removeAllFormatting = function ( range ) {
     this.setSelection( range );
     this._updatePath( range, true );
 
-    return this.focus();
+    // return this.focus();
 };
 
 proto.increaseQuoteLevel = command( 'modifyBlocks', increaseBlockQuoteLevel );
