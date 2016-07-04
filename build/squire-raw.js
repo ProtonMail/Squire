@@ -4,6 +4,20 @@
 
 "use strict";
 
+/**
+ * The requestAnimationFrame polyfill
+ * Paul Irish.
+ * {@link http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/}
+ */
+window._rAF = (function() {
+  return window.requestAnimationFrame ||
+     window.webkitRequestAnimationFrame ||
+     window.mozRequestAnimationFrame ||
+     function(callback) {
+       window.setTimeout(callback, 16);
+     };
+})();
+
 var DOCUMENT_POSITION_PRECEDING = 2; // Node.DOCUMENT_POSITION_PRECEDING
 var ELEMENT_NODE = 1;                // Node.ELEMENT_NODE;
 var TEXT_NODE = 3;                   // Node.TEXT_NODE;
@@ -3418,57 +3432,61 @@ proto.getHTML = function ( withBookMark ) {
 proto.setHTML = function ( html ) {
     var frag = this._doc.createDocumentFragment(),
         div = this.createElement( 'DIV' ),
+        self =  this,
         child;
 
-    // Parse HTML into DOM tree
-    div.innerHTML = html;
-    frag.appendChild( empty( div ) );
+    // Prevent a freeze if you append a big fragment into the body
+    _rAF(function() {
+        // Parse HTML into DOM tree
+        div.innerHTML = html;
+        frag.appendChild( empty( div ) );
 
-    cleanTree( frag );
-    cleanupBRs( frag );
+        cleanTree( frag );
+        cleanupBRs( frag );
 
-    fixContainer( frag );
+        fixContainer( frag );
 
-    // Fix cursor
-    var node = frag;
-    while ( node = getNextBlock( node ) ) {
-        fixCursor( node );
-    }
+        // Fix cursor
+        var node = frag;
+        while ( node = getNextBlock( node ) ) {
+            fixCursor( node );
+        }
 
-    // Don't fire an input event
-    this._ignoreChange = true;
+        // Don't fire an input event
+        self._ignoreChange = true;
 
-    // Remove existing body children
-    var body = this._body;
-    while ( child = body.lastChild ) {
-        body.removeChild( child );
-    }
+        // Remove existing body children
+        var body = self._body;
+        while ( child = body.lastChild ) {
+            body.removeChild( child );
+        }
 
-    // And insert new content
-    body.appendChild( frag );
-    fixCursor( body );
+        // And insert new content
+        body.appendChild( frag );
+        fixCursor( body );
 
-    // Reset the undo stack
-    this._undoIndex = -1;
-    this._undoStack.length = 0;
-    this._undoStackLength = 0;
-    this._isInUndoState = false;
+        // Reset the undo stack
+        self._undoIndex = -1;
+        self._undoStack.length = 0;
+        self._undoStackLength = 0;
+        self._isInUndoState = false;
 
-    // Record undo state
-    var range = this._getRangeAndRemoveBookmark() ||
-        this._createRange( body.firstChild, 0 );
-    this._recordUndoState( range );
-    this._getRangeAndRemoveBookmark( range );
-    // IE will also set focus when selecting text so don't use
-    // setSelection. Instead, just store it in lastSelection, so if
-    // anything calls getSelection before first focus, we have a range
-    // to return.
-    if ( losesSelectionOnBlur ) {
-        this._lastSelection = range;
-    } else {
-        this.setSelection( range );
-    }
-    this._updatePath( range, true );
+        // Record undo state
+        var range = self._getRangeAndRemoveBookmark() ||
+            self._createRange( body.firstChild, 0 );
+        self._recordUndoState( range );
+        self._getRangeAndRemoveBookmark( range );
+        // IE will also set focus when selecting text so don't use
+        // setSelection. Instead, just store it in lastSelection, so if
+        // anything calls getSelection before first focus, we have a range
+        // to return.
+        if ( losesSelectionOnBlur ) {
+            self._lastSelection = range;
+        } else {
+            self.setSelection( range );
+        }
+        self._updatePath( range, true );
+    });
 
     return this;
 };
