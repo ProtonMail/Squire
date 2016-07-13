@@ -28,6 +28,10 @@ function mergeObjects ( base, extras ) {
     return base;
 }
 
+var getWindowSelection = function ( self ) {
+    return self._win.getSelection() || null;
+};
+
 function Squire ( doc, config ) {
     var win = doc.defaultView;
     var body = doc.body;
@@ -333,9 +337,11 @@ proto.setSelection = function ( range ) {
 };
 
 proto.getSelection = function () {
-    var sel = this._sel,
-        selection, startContainer, endContainer;
-    if ( sel.rangeCount ) {
+    var sel = getWindowSelection( this );
+    var root = this._doc;
+    var selection, startContainer, endContainer;
+
+    if ( sel && sel.rangeCount ) {
         selection  = sel.getRangeAt( 0 ).cloneRange();
         startContainer = selection.startContainer;
         endContainer = selection.endContainer;
@@ -346,12 +352,16 @@ proto.getSelection = function () {
         if ( endContainer && isLeaf( endContainer ) ) {
             selection.setEndBefore( endContainer );
         }
+    }
+
+    // Contains or itself
+    if ( selection && root.contains( selection.commonAncestorContainer ) ) {
         this._lastSelection = selection;
     } else {
         selection = this._lastSelection;
     }
     if ( !selection ) {
-        selection = this._createRange( this._body.firstChild, 0 );
+        selection = this._createRange( root.firstChild, 0 );
     }
     return selection;
 };
