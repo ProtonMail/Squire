@@ -172,7 +172,7 @@ proto.createDefaultBlock = function ( children ) {
 };
 
 proto.didError = function ( error ) {
-    console.log( error );
+    console.error( error, error.details );
 };
 
 proto.getDocument = function () {
