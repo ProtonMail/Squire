@@ -10,6 +10,9 @@
  * {@link http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/}
  */
 window._rAF = (function() {
+    return function(cb) {
+        cb();
+    };
   return window.requestAnimationFrame ||
      window.webkitRequestAnimationFrame ||
      window.mozRequestAnimationFrame ||
