@@ -2200,8 +2200,8 @@ function Squire ( doc, config ) {
     this.addEventListener( 'keyup', this._updatePathOnEvent );
     this.addEventListener( 'mouseup', this._updatePathOnEvent );
 
-    this.addEventListener( 'focus', this, false );
-    this.addEventListener( 'blur', this, false );
+    body.addEventListener( 'focus', this, false );
+    body.addEventListener( 'blur', this, false );
 
     this._undoIndex = -1;
     this._undoStack = [];
