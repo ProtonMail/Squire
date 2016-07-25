@@ -1303,7 +1303,7 @@ proto.setHTML = function ( html ) {
         child;
 
     // Prevent a freeze if you append a big fragment into the body
-    _rAF(function() {
+    rAF(function() {
         // Parse HTML into DOM tree
         div.innerHTML = html;
         frag.appendChild( empty( div ) );

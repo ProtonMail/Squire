@@ -9,10 +9,7 @@
  * Paul Irish.
  * {@link http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/}
  */
-window._rAF = (function() {
-    return function(cb) {
-        cb();
-    };
+var rAF = (function() {
   return window.requestAnimationFrame ||
      window.webkitRequestAnimationFrame ||
      window.mozRequestAnimationFrame ||
@@ -3449,7 +3446,7 @@ proto.setHTML = function ( html ) {
         child;
 
     // Prevent a freeze if you append a big fragment into the body
-    _rAF(function() {
+    rAF(function() {
         // Parse HTML into DOM tree
         div.innerHTML = html;
         frag.appendChild( empty( div ) );
