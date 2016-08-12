@@ -59,6 +59,28 @@ function isContainer ( node ) {
         !isInline( node ) && !isBlock( node );
 }
 
+/**
+ * Check if a node is inside another one or the same
+ * Polyfill for IE11 as it does not support contains on document
+ * @param  {Node}  parent
+ * @param  {Node}  node
+ * @return {Boolean}
+ */
+function isOrContains ( parent, node ) {
+
+    if ('function' === typeof parent.contains) {
+        return parent.contains(node);
+    }
+
+    while ( node ) {
+        if ( node === parent ) {
+            return true;
+        }
+        node = node.parentNode;
+    }
+    return false;
+}
+
 function getBlockWalker ( node ) {
     var doc = node.ownerDocument,
         walker = new TreeWalker(
