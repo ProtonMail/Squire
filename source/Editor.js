@@ -355,7 +355,7 @@ proto.getSelection = function () {
     }
 
     // Contains or itself
-    if ( selection && root.contains( selection.commonAncestorContainer ) ) {
+    if ( selection && isOrContains( root, selection.commonAncestorContainer ) ) {
         this._lastSelection = selection;
     } else {
         selection = this._lastSelection;
