@@ -1394,7 +1394,7 @@ var keyHandlers = {
         var block, parent, nodeAfterSplit;
 
         // We handle this ourselves (HUM)
-        // event.preventDefault();
+        event.preventDefault();
 
         // Save undo checkpoint and add any links in the preceding section.
         // Remove any zws so we don't think there's content in an empty
@@ -1488,6 +1488,14 @@ var keyHandlers = {
         range = self._createRange( nodeAfterSplit, 0 );
         self.setSelection( range );
         self._updatePath( range, true );
+
+        // Scroll into view
+       if ( nodeAfterSplit.nodeType === TEXT_NODE ) {
+           nodeAfterSplit = nodeAfterSplit.parentNode;
+       }
+
+       nodeAfterSplit.scrollIntoView( false );
+
     },
     backspace: function ( self, event, range ) {
         var root = self._root;
