@@ -2628,9 +2628,10 @@ proto.fireEvent = function ( type, event ) {
             }
             this._isFocused = true;
         } else {
-            if ( isFocused || !this._isFocused ) {
-                return this;
-            }
+            // Need to comment this to emit the blur event :/
+            // if ( isFocused || !this._isFocused ) {
+            //     return this;
+            // }
             this._isFocused = false;
         }
     }
