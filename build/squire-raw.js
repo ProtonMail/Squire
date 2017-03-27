@@ -3094,12 +3094,20 @@ proto._updatePathOnEvent = function () {
 // --- Focus ---
 
 proto.focus = function () {
-    this._root.focus();
-
     if ( isIE ) {
+        win.focus();
         this.fireEvent( 'focus' );
+        return this;
     }
 
+    /**
+     * Crash with IE11
+     * Scenario:
+     *   - dnd 1 attachment => inline
+     *   - dnd another attachment => inline
+     *   - :popcorn:
+     */
+    this._root.focus();
     return this;
 };
 
