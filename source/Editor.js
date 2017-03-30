@@ -632,7 +632,6 @@ proto._updatePathOnEvent = function () {
 
 proto.focus = function () {
     if ( isIE ) {
-        win.focus();
         this.fireEvent( 'focus' );
         return this;
     }
