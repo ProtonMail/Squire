@@ -2884,11 +2884,27 @@ proto.moveCursorToEnd = function () {
     return this._moveCursorTo( false );
 };
 
-var getWindowSelection = function ( self ) {
-    return self._win.getSelection() || null;
+var getWindowSelection = function ( self, isIE11Image ) {
+
+    /**
+     * window.getSelection creates a crash on IE11 if it's inside an IFRAME
+     * If we call it too many time.
+     * IE is slow, so we defer the call or we don't do it if we don't need it
+     * IE en déambulateur
+     */
+    if (isIE11Image) {
+        return null;
+    }
+
+    try {
+        return self._win.getSelection() || null;
+    } catch (e) {
+        console.error(e);
+        return self._doc.selection.createRange() || null;
+    }
 };
 
-proto.setSelection = function ( range ) {
+proto.setSelection = function ( range, isIE11Image ) {
     if ( range ) {
         this._lastSelection = range;
         // If we're setting selection, that automatically, and synchronously, // triggers a focus event. So just store the selection and mark it as
@@ -2913,7 +2929,7 @@ proto.setSelection = function ( range ) {
             if ( isIOS ) {
                 this._win.focus();
             }
-            var sel = getWindowSelection( this );
+            var sel = getWindowSelection( this, isIE11Image );
             if ( sel ) {
                 sel.removeAllRanges();
                 sel.addRange( range );
@@ -2923,8 +2939,8 @@ proto.setSelection = function ( range ) {
     return this;
 };
 
-proto.getSelection = function () {
-    var sel = getWindowSelection( this );
+proto.getSelection = function (isIE11Image) {
+    var sel = getWindowSelection( this, isIE11Image );
     var root = this._root;
     var selection, startContainer, endContainer;
     // If not focused, always rely on cached selection; another function may
@@ -2960,8 +2976,22 @@ function disableRestoreSelection () {
     this._restoreSelection = false;
 }
 function restoreSelection () {
-    if ( this._restoreSelection ) {
-        this.setSelection( this._lastSelection );
+    var self = this;
+    if ( self._restoreSelection ) {
+
+        /**
+         * Will call getSelection too fast for IE11 so we need to defer it
+         * to prevent a crash of the browser.
+         * Yolo
+         */
+        if (isIE) {
+            return setTimeout(function() {
+                self.setSelection( self._lastSelection );
+            }, 100);
+        }
+
+        self.setSelection( self._lastSelection );
+
     }
 }
 
@@ -4108,8 +4138,8 @@ proto.setHTML = function ( html ) {
     return this;
 };
 
-proto.insertElement = function ( el, range ) {
-    if ( !range ) { range = this.getSelection(); }
+proto.insertElement = function ( el, range, isIE11Image ) {
+    if ( !range ) { range = this.getSelection(isIE11Image); }
     range.collapse( true );
     if ( isInline( el ) ) {
         insertNodeInRange( range, el );
@@ -4141,7 +4171,7 @@ proto.insertElement = function ( el, range ) {
         moveRangeBoundariesDownTree( range );
     }
     this.focus();
-    this.setSelection( range );
+    this.setSelection( range, isIE11Image );
     this._updatePath( range );
 
     if ( !canObserveMutations ) {
@@ -4155,7 +4185,7 @@ proto.insertImage = function ( src, attributes ) {
     var img = this.createElement( 'IMG', mergeObjects({
         src: src
     }, attributes, true ));
-    this.insertElement( img );
+    this.insertElement( img, null, isIE );
     return img;
 };
 
