@@ -912,7 +912,8 @@ var deleteContentsOfRange = function ( range, root ) {
 // After method, range will be around inserted content
 var insertTreeFragmentIntoRange = function ( range, frag, root ) {
     var node, block, blockContentsAfterSplit, stopPoint, container, offset;
-    var firstBlockInFrag, nodeAfterSplit, nodeBeforeSplit, tempRange;
+    var replaceBlock, firstBlockInFrag, nodeAfterSplit, nodeBeforeSplit;
+    var tempRange;
 
     // Fixup content: ensure no top-level inline, and add cursor fix elements.
     fixContainer( frag, root );
@@ -935,10 +936,12 @@ var insertTreeFragmentIntoRange = function ( range, frag, root ) {
 
     // Merge the contents of the first block in the frag with the focused block.
     // If there are contents in the block after the focus point, collect this
-    // up to insert in the last block later
+    // up to insert in the last block later. If the block is empty, replace
+    // it instead of merging.
     block = getStartBlockOfRange( range, root );
     firstBlockInFrag = getNextBlock( frag, frag );
-    if ( block && firstBlockInFrag &&
+    replaceBlock = !!block && isEmptyBlock( block );
+    if ( block && firstBlockInFrag && !replaceBlock &&
             // Don't merge table cells or PRE elements into block
             !getNearest( firstBlockInFrag, frag, 'PRE' ) &&
             !getNearest( firstBlockInFrag, frag, 'TABLE' ) ) {
@@ -975,6 +978,11 @@ var insertTreeFragmentIntoRange = function ( range, frag, root ) {
 
     // Is there still any content in the fragment?
     if ( getLength( frag ) ) {
+        if ( replaceBlock ) {
+            range.setEndBefore( block );
+            range.collapse( false );
+            detach( block );
+        }
         moveRangeBoundariesUpTree( range, stopPoint, stopPoint, root );
         // Now split after block up to blockquote (if a parent) or root
         nodeAfterSplit = split(
@@ -2279,8 +2287,21 @@ var onPaste = function ( event ) {
     // ---------------------------------
     // https://html.spec.whatwg.org/multipage/interaction.html
 
-    // Edge only provides access to plain text as of 2016-03-11.
-    if ( !isEdge && items ) {
+    // Edge only provides access to plain text as of 2016-03-11 and gives no
+    // indication there should be an HTML part. However, it does support access
+    // to image data, so check if this is present and use if so.
+    if ( isEdge && items ) {
+        l = items.length;
+        while ( l-- ) {
+            if ( !choosePlain && /^image\/.*/.test( items[l].type ) ) {
+                hasImage = true;
+            }
+        }
+        if ( !hasImage ) {
+            items = null;
+        }
+    }
+    if ( items ) {
         event.preventDefault();
         l = items.length;
         while ( l-- ) {
