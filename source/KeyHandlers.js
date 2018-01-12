@@ -256,8 +256,7 @@ var keyHandlers = {
            nodeAfterSplit = nodeAfterSplit.parentNode;
        }
 
-       nodeAfterSplit.scrollIntoView( false );
-
+       handleScroll(self._root, nodeAfterSplit);
     },
     backspace: function ( self, event, range ) {
         var root = self._root;
