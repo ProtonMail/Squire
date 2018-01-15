@@ -1286,6 +1286,29 @@ var keys = {
     221: ']'
 };
 
+/**
+ * If the cursor is at the end of a link , then move it outside of the link so that the entered text does
+ * not become part of the link text. Special case for gecko which does not move outside automatically.
+ *
+ * @param {Squire} self Instance of the editor.
+ * @param {Range} range Current selection range.
+ */
+function handleATagCursor(self, range) {
+    var node = range.endContainer;
+    var parent = node.parentNode;
+    if (isGecko) {
+        if ( range.collapsed && node.nodeName === 'A' && range.endOffset === getLength( node ) ) {
+            range.setStartAfter( node );
+            self.setSelection( range );
+        }
+    }
+    if ( range.collapsed && parent.nodeName === 'A' &&
+        !node.nextSibling && range.endOffset === getLength( node ) ) {
+        range.setStartAfter( parent );
+        self.setSelection( range );
+    }
+}
+
 // Ref: http://unixpapa.com/js/key.html
 var onKey = function ( event ) {
     var code = event.keyCode,
@@ -1339,6 +1362,8 @@ var onKey = function ( event ) {
         this._ensureBottomLine();
         this.setSelection( range );
         this._updatePath( range, true );
+    } else {
+        handleATagCursor(this, range);
     }
 };
 
@@ -1527,8 +1552,7 @@ var keyHandlers = {
            nodeAfterSplit = nodeAfterSplit.parentNode;
        }
 
-       nodeAfterSplit.scrollIntoView( false );
-
+       handleScroll(self._root, nodeAfterSplit);
     },
     backspace: function ( self, event, range ) {
         var root = self._root;
@@ -1702,29 +1726,20 @@ var keyHandlers = {
         }
     },
     space: function ( self, _, range ) {
-        var node, parent;
         self._recordUndoState( range );
         addLinks( range.startContainer, self._root, self );
         self._getRangeAndRemoveBookmark( range );
 
-        // If the cursor is at the end of a link (<a>foo|</a>) then move it
-        // outside of the link (<a>foo</a>|) so that the space is not part of
-        // the link text.
-        node = range.endContainer;
-        parent = node.parentNode;
-        if ( range.collapsed && parent.nodeName === 'A' &&
-                !node.nextSibling && range.endOffset === getLength( node ) ) {
-            range.setStartAfter( parent );
-        }
+        handleATagCursor(self, range);
+
         // Delete the selection if not collapsed
-        else if ( !range.collapsed ) {
+        if ( !range.collapsed ) {
             deleteContentsOfRange( range, self._root );
             self._ensureBottomLine();
             self.setSelection( range );
             self._updatePath( range, true );
+            self.setSelection( range );
         }
-
-        self.setSelection( range );
     },
     left: function ( self ) {
         self._removeZWS();
@@ -2465,6 +2480,51 @@ var onDrop = function ( event ) {
     }
     if ( hasHTML || hasPlain ) {
         this.saveUndoState();
+    }
+};
+var SCROLL_BUFFER = 10;
+
+/**
+ * Gets the scroll position of the element, bounded by the size.
+ *
+ * @param {DOMElement} scrollable
+ * @return {object} Map with `x` and `y` keys.
+ */
+var getScrollPosition = function (scrollable) {
+    var scrollPosition = {
+        x: scrollable.scrollLeft,
+        y: scrollable.scrollTop
+    };
+
+    var xMax = scrollable.scrollWidth - scrollable.clientWidth;
+    var yMax = scrollable.scrollHeight - scrollable.clientHeight;
+
+    scrollPosition.x = Math.max(0, Math.min(scrollPosition.x, xMax));
+    scrollPosition.y = Math.max(0, Math.min(scrollPosition.y, yMax));
+
+    return scrollPosition;
+};
+
+/**
+ * Sets the scroll of the element.
+ *
+ * @param {DOMElement} root of the editor
+ * @param {DOMElement} node that was inserted in to the root.
+ */
+var handleScroll = function (root, node) {
+    var scrollPosition = getScrollPosition(root);
+
+    var nodeTop = node.offsetTop;
+    var nodeBottom = node.offsetHeight + nodeTop;
+    var rootHeight = root.offsetHeight;
+    var scrollBottom = rootHeight + scrollPosition.y;
+    var scrollDelta = nodeBottom - scrollBottom;
+
+    if (scrollDelta > 0) {
+        root.scrollTop = Math.min(
+            nodeTop - rootHeight / 2,
+            root.scrollTop + scrollDelta + SCROLL_BUFFER
+        );
     }
 };
 
