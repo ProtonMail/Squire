@@ -1738,8 +1738,9 @@ var keyHandlers = {
             self._ensureBottomLine();
             self.setSelection( range );
             self._updatePath( range, true );
-            self.setSelection( range );
         }
+
+        self.setSelection(range);
     },
     left: function ( self ) {
         self._removeZWS();
