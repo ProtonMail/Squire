@@ -251,6 +251,10 @@ function fixCursor ( node, root ) {
         return originalNode;
     }
 
+    if ( node.className && /protonmail_signature/.test(node.className) ) {
+        return originalNode;
+    }
+
     if ( isInline( node ) ) {
         child = node.firstChild;
         while ( cantFocusEmptyTextNodes && child &&

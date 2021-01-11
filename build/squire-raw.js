@@ -418,6 +418,10 @@ function fixCursor ( node, root ) {
         return originalNode;
     }
 
+    if ( node.className && /protonmail_signature/.test(node.className) ) {
+        return originalNode;
+    }
+
     if ( isInline( node ) ) {
         child = node.firstChild;
         while ( cantFocusEmptyTextNodes && child &&
@@ -2989,7 +2993,7 @@ proto.setSelection = function ( range ) {
                     range.startContainer,
                     range.startOffset,
                     range.endContainer,
-                    range.endOffset,
+                    range.endOffset
                 );
             } else if ( sel ) {
                 // This is just for IE11
@@ -3888,10 +3892,9 @@ var increaseBlockQuoteLevel = function ( frag ) {
 };
 
 var decreaseBlockQuoteLevel = function ( frag ) {
-    var root = this._root;
     var blockquotes = frag.querySelectorAll( 'blockquote' );
     Array.prototype.filter.call( blockquotes, function ( el ) {
-        return !getNearest( el.parentNode, root, 'BLOCKQUOTE' );
+        return !getNearest( el.parentNode, frag, 'BLOCKQUOTE' );
     }).forEach( function ( el ) {
         replaceWith( el, empty( el ) );
     });
